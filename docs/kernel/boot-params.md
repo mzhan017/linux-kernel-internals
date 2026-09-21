@@ -47,6 +47,63 @@ Anything not matched by either is treated as either:
 
 For loadable modules, parameters passed on the `insmod`/`modprobe` command line are parsed when the module is loaded, via `kernel/params.c`. For built-in modules, these appear as `module.param=value` on the kernel command line and are handled during Phase 2.
 
+### Bird view
+```mermaid
+flowchart TD
+    SK[start_kernel]
+
+    %% Phase1 purple
+    SK -.->|Phase1| SA[setup_arch]
+    SA --> PE["parse_early_param"]
+    PE --> PEO["parse_early_options"]
+    PEO --> PA_NULL["parse_args combined with<br/>Null list"]
+    PA_NULL --> PO1[parse_one]
+    PO1 --> NO_MATCH1["Not match<br/>-- do_early_param"]
+    NO_MATCH1 --> CHECK["Do check early flag"]
+    CHECK --> LIST_EARLY[Iterate the list of<br/>__setup_start - __setup_end]
+
+    %% Phase2 black
+    SK -->|Phase2| PA[parse_args<br/>With list]
+    PA --> PO2[parse_one]
+    PO2 --> M[Match]
+    PO2 -->|phase2| NO_MATCH2["Phase2 Not match<br/>unknown_bootoption"]
+
+    M --> LIST_PARAM[Iterate the list of<br/>__start_param - __stop_param]
+    MACRO_SETUP[macro<br/>__setup<br/>early_param] -->|add| LIST_EARLY
+    MACRO_MODULE[macro<br/>module_param<br/>core_param] -->|add| LIST_PARAM
+
+    NO_MATCH2 --> SYS["sysctl_is_alias"]
+    NO_MATCH2 --> REP["repair_env_string"]
+    NO_MATCH2 --> OBS["obsolete_checksetup"]
+	OBS --> LIST_EARLY
+
+    %% Phase3 blue
+    LM["inmod/modprobe"]
+    LM -->|Phase3| INIT_MOD["sys_init_module"]
+    INIT_MOD --> LOAD_MOD["load_module"]
+    LOAD_MOD --> PA
+    PO2 -->|phase3| NO_MATCH3["Phase3 Not match<br/>unknown_module_param_cb"]
+    
+    %% dot line combined with
+    PA -. phase2 combined with .-> NO_MATCH2
+    PA_NULL -. combined with .-> NO_MATCH1
+    PA -. phase3 combined with .-> NO_MATCH3
+
+    %% color style
+    classDef phase1 stroke:#993399,stroke-width:2px
+    classDef phase2 stroke:#000000,stroke-width:2px
+    classDef phase3 stroke:#0066cc,stroke-width:2px
+    class LIST_PARAM fill:#77bb77
+    class LIST_EARLY fill:#ee7744
+    class MACRO_SETUP fill:#66aadd
+    class MACRO_MODULE fill:#bb77bb
+    class SK fill:#336699,color:#fff
+
+    class SA,PE,PEO,PA_NULL,PO1,NO_MATCH1,CHECK phase1
+    class PA,PO2,M,NO_MATCH2 phase2
+    class DOTS phase3
+```
+
 ---
 
 ## `early_param()` macro
