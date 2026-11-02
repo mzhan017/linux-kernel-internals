@@ -17,9 +17,12 @@ use that file as the translation target unless the user specifies otherwise.
    and other human-readable English separately from code and identifiers.
 3. Translate all in-scope explanatory English. Do not stop after the visible
    excerpt if the request concerns the whole page.
-4. Preserve the document's organization and verify that links, anchors, and
+4. Write the translated result back to the target file, replacing the original
+   file contents while preserving the Markdown structure, code blocks, and
+   protected identifiers.
+5. Preserve the document's organization and verify that links, anchors, and
    Markdown structure remain valid.
-5. Review the finished page for untranslated explanatory English, accidental
+6. Review the finished page for untranslated explanatory English, accidental
    changes to protected content, and whitespace errors.
 
 ## Translation rules
@@ -58,6 +61,8 @@ use that file as the translation target unless the user specifies otherwise.
 ## Completion checks
 
 - The requested page or selection has been translated in full.
+- The translated content has been written back to the target file, replacing
+  the original file contents with the finalized Chinese version.
 - Natural-language English is not left behind except where intentionally
   retained as a technical term, proper name, identifier, filename, quotation,
   link label, or protected code/comment.
